@@ -39,7 +39,7 @@ export default function Home() {
         className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-transform active:scale-95"
         style={{ background: 'white', color: '#080b14' }}
       >
-        Start Game <span>→</span>
+        Empezar juego <span>→</span>
       </button>
     </main>
   )

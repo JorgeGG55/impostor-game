@@ -13,6 +13,7 @@ export default function SetupPage() {
   const [impostorCount, setImpostorCount] = useState<number | ''>('')
   const [playerNames, setPlayerNames] = useState<string[]>([])
   const [starting, setStarting] = useState(false)
+  const [impostorHint, setImpostorHint] = useState(false)
 
   useEffect(() => {
     fetch('/api/categories')
@@ -29,6 +30,7 @@ export default function SetupPage() {
         setImpostorCount(prev.config.impostorCount)
         setPlayerNames(prev.names ?? [])
         setSelectedCategories(prev.selectedCategories ?? [])
+        setImpostorHint(prev.config.impostorHint ?? false)
       })
   }, [])
 
@@ -71,6 +73,7 @@ export default function SetupPage() {
           categoryName,
           playerCount,
           impostorCount,
+          impostorHint,
         },
         names,
         selectedCategories,
@@ -82,6 +85,7 @@ export default function SetupPage() {
           categoryName,
           playerCount,
           impostorCount,
+          impostorHint,
         },
         players: data.players.map((p: Player, i: number) => ({ ...p, name: names[i] })),
         secretWord: data.secretWord,
@@ -237,6 +241,57 @@ export default function SetupPage() {
           ))}
         </section>
       )}
+
+      {/* Pista para el impostor */}
+      <section
+        className="mb-4 p-4 rounded-2xl flex items-center justify-between"
+        style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}
+      >
+        <div>
+          <p className="text-xs font-semibold tracking-widest uppercase"
+            style={{ color: 'var(--accent)' }}>
+            Pista para el impostor
+          </p>
+        </div>
+        <button
+          onClick={() => setImpostorHint((v) => !v)}
+          className="relative shrink-0 transition-all duration-300"
+          style={{
+            width: '64px',
+            height: '28px',
+            borderRadius: '999px',
+            background: impostorHint ? '#22c55e' : '#374151',
+            border: `2px solid ${impostorHint ? '#16a34a' : '#4b5563'}`,
+          }}
+        >
+          <span
+            style={{
+              position: 'absolute',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              color: 'white',
+              left: impostorHint ? '8px' : 'auto',
+              right: impostorHint ? 'auto' : '8px',
+            }}
+          >
+            {impostorHint ? 'Si' : 'No'}
+          </span>
+          <span
+            className="absolute top-0.5"
+            style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '999px',
+              background: 'white',
+              left: impostorHint ? '40px' : '4px',
+              transition: 'left 0.2s ease',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+            }}
+          />
+        </button>
+      </section>
 
       {/* Botón */}
       <button

@@ -4,6 +4,7 @@ export interface GameConfig {
   categoryName: string
   playerCount: number
   impostorCount: number
+  impostorHint: boolean
 }
 
 // El rol de cada jugador
