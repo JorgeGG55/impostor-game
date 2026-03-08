@@ -3,50 +3,61 @@ import connectDB from '@/lib/mongodb'
 import Category from '@/models/Category'
 import { assignRoles, pickRandomWord } from '@/lib/gameLogic'
 
+interface GameRequestBody {
+  categoryIds: string[]
+  playerCount: number
+  impostorCount: number
+}
+
+function validateBody({ categoryIds, playerCount, impostorCount }: GameRequestBody): string | null {
+  if (!categoryIds?.length || !playerCount || !impostorCount) {
+    return 'Faltan campos requeridos'
+  }
+  if (impostorCount >= playerCount) {
+    return 'Los impostores no pueden ser iguales o más que los jugadores'
+  }
+  return null
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body: GameRequestBody = await request.json()
+
+    const validationError = validateBody(body)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
+    }
+
     const { categoryIds, playerCount, impostorCount } = body
-
-    if (!categoryIds || !categoryIds.length || !playerCount || !impostorCount) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
-
-    if (impostorCount >= playerCount) {
-      return NextResponse.json(
-        { error: 'Impostors cannot be equal or more than players' },
-        { status: 400 }
-      )
-    }
 
     await connectDB()
 
     const categories = await Category.find({ _id: { $in: categoryIds } }).lean()
     if (!categories.length) {
       return NextResponse.json(
-        { error: 'Categories not found' },
+        { error: 'Categorías no encontradas' },
         { status: 404 }
       )
     }
 
-    // Mezclamos todas las palabras de todas las categorías seleccionadas
     const allWords = categories.flatMap((cat) => cat.words)
     const secretWord = pickRandomWord(allWords)
-    const categoryName = categories.map((c) => c.name).join(' & ')
-    const players = assignRoles(playerCount, impostorCount, secretWord)
+    const wordCategory = categories.find((cat) => cat.words.includes(secretWord))
+    const categoryName = wordCategory?.name ?? categories.map((c) => c.name).join(' & ')
 
-    return NextResponse.json({
-      players,
+    const players = assignRoles({
+      playerCount,
+      impostorCount,
       secretWord,
       categoryName,
     })
+
+    return NextResponse.json({ players, secretWord, categoryName })
+
   } catch (error) {
-    console.error('Error creating game:', error)
+    console.error('Error al crear la partida:', error)
     return NextResponse.json(
-      { error: 'Failed to create game' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     )
   }

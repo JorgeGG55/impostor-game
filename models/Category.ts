@@ -4,7 +4,6 @@ export interface ICategory extends Document {
   name: string
   emoji: string
   words: string[]
-  createdAt: Date
 }
 
 const CategorySchema = new Schema<ICategory>(
@@ -25,7 +24,7 @@ const CategorySchema = new Schema<ICategory>(
       required: true,
       validate: {
         validator: (words: string[]) => words.length >= 5,
-        message: 'A category must have at least 5 words',
+        message: 'Una categoría debe tener al menos 5 palabras',
       },
     },
   },
@@ -34,6 +33,5 @@ const CategorySchema = new Schema<ICategory>(
   }
 )
 
-// Evitar re-compilar el modelo en hot reload
 export default mongoose.models.Category ||
   mongoose.model<ICategory>('Category', CategorySchema)

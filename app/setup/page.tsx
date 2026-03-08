@@ -1,306 +1,106 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CategoryResponse, Player } from '@/types'
+import { useGameSetup } from '@/hooks/useGameSetup'
+import SectionCard from '@/components/SectionCard'
+import SectionLabel from '@/components/SectionLabel'
+import SelectField from '@/components/SelectField'
+import CategoryGrid from '@/components/CategoryGrid'
+import PlayerNameList from '@/components/PlayerNameList'
+import ToggleSwitch from '@/components/ToggleSwitch'
 
 export default function SetupPage() {
   const router = useRouter()
-  const [categories, setCategories] = useState<CategoryResponse[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedCategories, setSelectedCategories] = useState<CategoryResponse[]>([])
-  const [playerCount, setPlayerCount] = useState<number | ''>('')
-  const [impostorCount, setImpostorCount] = useState<number | ''>('')
-  const [playerNames, setPlayerNames] = useState<string[]>([])
-  const [starting, setStarting] = useState(false)
-  const [impostorHint, setImpostorHint] = useState(false)
-
-  useEffect(() => {
-    fetch('/api/categories')
-      .then((r) => r.json())
-      .then((data: CategoryResponse[]) => {
-        setCategories(data)
-        setLoading(false)
-
-        const raw = sessionStorage.getItem('lastConfig')
-        if (!raw) return
-        const prev = JSON.parse(raw)
-
-        setPlayerCount(prev.config.playerCount)
-        setImpostorCount(prev.config.impostorCount)
-        setPlayerNames(prev.names ?? [])
-        setSelectedCategories(prev.selectedCategories ?? [])
-        setImpostorHint(prev.config.impostorHint ?? false)
-      })
-  }, [])
-
-  useEffect(() => {
-    if (typeof playerCount === 'number') {
-      setPlayerNames((prev) => Array.from({ length: playerCount }, (_, i) => prev[i] ?? ''))
-    }
-  }, [playerCount])
-
-  const maxImpostors = typeof playerCount === 'number'
-    ? Math.min(3, Math.max(1, playerCount - 2))
-    : 1
-
-  const handleStart = async () => {
-    if (selectedCategories.length === 0 || playerCount === '' || impostorCount === '') return
-    setStarting(true)
-
-    try {
-      const res = await fetch('/api/game', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          categoryIds: selectedCategories.map((c) => c._id),
-          playerCount,
-          impostorCount,
-        }),
-      })
-
-      const data = await res.json()
-
-      const names = Array.from({ length: playerCount as number }, (_, i) =>
-        playerNames[i]?.trim() || `Jugador ${i + 1}`
-      )
-
-      const categoryName = selectedCategories.map((c) => c.name).join(' & ')
-
-      sessionStorage.setItem('lastConfig', JSON.stringify({
-        config: {
-          categoryIds: selectedCategories.map((c) => c._id),
-          categoryName,
-          playerCount,
-          impostorCount,
-          impostorHint,
-        },
-        names,
-        selectedCategories,
-      }))
-
-      sessionStorage.setItem('gameSession', JSON.stringify({
-        config: {
-          categoryIds: selectedCategories.map((c) => c._id),
-          categoryName,
-          playerCount,
-          impostorCount,
-          impostorHint,
-        },
-        players: data.players.map((p: Player, i: number) => ({ ...p, name: names[i] })),
-        secretWord: data.secretWord,
-        currentPlayerIndex: 0,
-        phase: 'passing',
-      }))
-
-      router.push('/game')
-    } catch (err) {
-      console.error(err)
-      setStarting(false)
-    }
-  }
-
-  const toggleCategory = (cat: CategoryResponse) => {
-    setSelectedCategories((prev) =>
-      prev.some((c) => c._id === cat._id)
-        ? prev.filter((c) => c._id !== cat._id)
-        : [...prev, cat]
-    )
-  }
+  const {
+    categories,
+    loading,
+    selectedCategories,
+    playerCount,
+    setPlayerCount,
+    impostorCount,
+    setImpostorCount,
+    playerNames,
+    setPlayerNames,
+    starting,
+    impostorHint,
+    setImpostorHint,
+    maxImpostors,
+    toggleCategory,
+    handleStart,
+  } = useGameSetup()
 
   return (
     <main className="min-h-dvh flex flex-col px-5 py-8" style={{ background: 'var(--bg)' }}>
 
       {/* Header */}
-      <div className="mb-8">
+      <div className="p-4 pt-0 lg:mb-8">
         <button onClick={() => router.push('/')} className="text-sm mb-4 opacity-50">← Volver</button>
         <h1 className="text-3xl font-black">Configura tu sesión</h1>
       </div>
 
-      {/* Selector de categorías */}
-      <section
-        className="mb-4 p-4 rounded-2xl"
-        style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}
-      >
-        <p className="text-xs font-semibold tracking-widest uppercase mb-3"
-          style={{ color: 'var(--accent)' }}>
+      {/* Categorías */}
+      <SectionCard>
+        <SectionLabel>
           Categorías {selectedCategories.length > 0 && `· ${selectedCategories.length} seleccionadas`}
+        </SectionLabel>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
+          Selecciona 1 o más categorías.
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          {loading ? (
-            [1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-16 rounded-xl animate-pulse"
-                style={{ background: 'var(--surface-2)' }} />
-            ))
-          ) : (
-            categories.map((cat) => {
-              const isSelected = selectedCategories.some((c) => c._id === cat._id)
-
-              return (
-                <button
-                  key={cat._id}
-                  onClick={() => toggleCategory(cat)}
-                  className="flex items-center gap-2 p-3 rounded-xl border text-left transition-all active:scale-95"
-                  style={{
-                    background: isSelected ? '#ffffff' : 'transparent',
-                    color: isSelected ? '#000000' : '#ffffff',
-                    border: '1px solid #ffffff',
-                  }}
-                >
-                  <span className="text-xl">{cat.emoji}</span>
-                  <span className="text-sm font-semibold leading-tight flex-1">
-                    {cat.name}
-                  </span>
-                </button>
-              )
-            })
-          )}
-        </div>
-      </section>
+        <CategoryGrid
+          categories={categories}
+          selectedCategories={selectedCategories}
+          loading={loading}
+          onToggle={toggleCategory}
+        />
+      </SectionCard>
 
       {/* Jugadores e Impostores */}
-      <section
-        className="mb-4 p-4 rounded-2xl flex flex-col gap-3"
-        style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}
-      >
-        {/* Jugadores */}
-        <div className="flex-1">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3"
-            style={{ color: 'var(--accent)' }}>
-            Jugadores
-          </p>
-          <div className="relative">
-            <select
-              value={playerCount}
-              onChange={(e) => {
-                const val = Number(e.target.value)
-                setPlayerCount(val)
-                setImpostorCount('')
-              }}
-              className="w-full p-3 border border-white rounded-xl font-bold text-lg appearance-none text-center cursor-pointer"
-              style={{ background: 'var(--bg)', color: playerCount === '' ? 'var(--text-muted)' : 'white' }}
-            >
-              <option value="" disabled>Nº jugadores</option>
-              {Array.from({ length: 10 }, (_, i) => i + 3).map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs"
-              style={{ color: 'var(--text-muted)' }}>▼</span>
-          </div>
-        </div>
+      <SectionCard className="flex flex-col gap-3">
+        <SelectField
+          label="Jugadores"
+          labelColor="var(--accent)"
+          value={playerCount}
+          onChange={(val) => { setPlayerCount(val); setImpostorCount('') }}
+          placeholder="Nº jugadores"
+          options={Array.from({ length: 10 }, (_, i) => i + 3)}
+        />
+        <SelectField
+          label="Impostores"
+          labelColor="var(--danger)"
+          value={impostorCount}
+          onChange={setImpostorCount}
+          placeholder="Nº impostores"
+          options={Array.from({ length: maxImpostors }, (_, i) => i + 1)}
+          disabled={playerCount === ''}
+        />
+      </SectionCard>
 
-        {/* Impostores */}
-        <div className="flex-1">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3"
-            style={{ color: 'var(--danger)' }}>
-            Impostores
-          </p>
-          <div className="relative">
-            <select
-              value={impostorCount}
-              onChange={(e) => setImpostorCount(Number(e.target.value))}
-              disabled={playerCount === ''}
-              className="w-full p-3 rounded-xl border border-white font-bold text-lg appearance-none text-center cursor-pointer disabled:opacity-40"
-              style={{ background: 'var(--bg)', color: impostorCount === '' ? 'var(--text-muted)' : 'white' }}
-            >
-              <option value="" disabled>Nº impostores</option>
-              {Array.from({ length: maxImpostors }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs"
-              style={{ color: 'var(--text-muted)' }}>▼</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Nombres de jugadores */}
+      {/* Nombres */}
       {typeof playerCount === 'number' && playerCount > 0 && (
-        <section
-          className="mb-4 p-4 rounded-2xl flex flex-col gap-3"
-          style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}
-        >
-          <p className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: 'var(--accent)' }}>
-            Nombres
-          </p>
-          {Array.from({ length: playerCount }, (_, i) => (
-            <input
-              key={i}
-              type="text"
-              placeholder={`Jugador ${i + 1}`}
-              value={playerNames[i] ?? ''}
-              onChange={(e) => {
-                const updated = [...playerNames]
-                updated[i] = e.target.value
-                setPlayerNames(updated)
-              }}
-              className="w-full border border-white outline-none p-3 rounded-xl font-medium text-base"
-            />
-          ))}
-        </section>
+        <SectionCard className="flex flex-col gap-3">
+          <SectionLabel className='mb-0!'>Nombres</SectionLabel>
+          <PlayerNameList
+            playerCount={playerCount}
+            playerNames={playerNames}
+            onChange={setPlayerNames}
+          />
+        </SectionCard>
       )}
 
       {/* Pista para el impostor */}
-      <section
-        className="mb-4 p-4 rounded-2xl flex items-center justify-between"
-        style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}
-      >
-        <div>
-          <p className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: 'var(--accent)' }}>
-            Pista para el impostor
-          </p>
-        </div>
-        <button
-          onClick={() => setImpostorHint((v) => !v)}
-          className="relative shrink-0 transition-all duration-300"
-          style={{
-            width: '64px',
-            height: '28px',
-            borderRadius: '999px',
-            background: impostorHint ? '#22c55e' : '#374151',
-            border: `2px solid ${impostorHint ? '#16a34a' : '#4b5563'}`,
-          }}
-        >
-          <span
-            style={{
-              position: 'absolute',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              fontSize: '10px',
-              fontWeight: 'bold',
-              color: 'white',
-              left: impostorHint ? '8px' : 'auto',
-              right: impostorHint ? 'auto' : '8px',
-            }}
-          >
-            {impostorHint ? 'Si' : 'No'}
-          </span>
-          <span
-            className="absolute top-0.5"
-            style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '999px',
-              background: 'white',
-              left: impostorHint ? '40px' : '4px',
-              transition: 'left 0.2s ease',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
-            }}
-          />
-        </button>
-      </section>
+      <SectionCard className="flex items-center justify-between">
+        <SectionLabel className='mb-0!'>Pista para el impostor</SectionLabel>
+        <ToggleSwitch value={impostorHint} onChange={setImpostorHint} />
+      </SectionCard>
 
       {/* Botón */}
       <button
         onClick={handleStart}
         disabled={selectedCategories.length === 0 || playerCount === '' || impostorCount === '' || starting}
-        className="w-full py-4 rounded-2xl font-bold text-lg transition-all active:scale-95 disabled:opacity-50 mt-auto"
+        className="w-full py-4 rounded-2xl font-bold text-lg transition-all active:scale-95 disabled:opacity-50 mt-5"
         style={{ background: 'var(--accent)', color: 'white' }}
       >
-        {starting ? 'Preparando...' : "Empezar a jugar ▶"}
+        {starting ? 'Preparando...' : 'Empezar a jugar ▶'}
       </button>
     </main>
   )

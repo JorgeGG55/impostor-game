@@ -1,29 +1,21 @@
-'use client'
-
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import AnimatedHero from '@/components/AnimatedHero'
 
 export default function Home() {
-  const router = useRouter()
-
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-between px-6 py-12"
-      style={{ background: 'var(--bg)' }}>
-
+    <main
+      className="min-h-dvh flex flex-col items-center justify-between px-6 py-12"
+      style={{ background: 'var(--bg)' }}
+    >
       {/* Hero */}
       <div className="flex flex-col items-center text-center gap-6">
-        {/* Máscara animada */}
-        <div className="relative w-52 h-52 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full opacity-20 animate-pulse"
-            style={{ background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)' }} />
-          <div className="text-9xl select-none">🕵️</div>
-        </div>
+        <AnimatedHero />
 
         <div>
           <h1 className="text-5xl font-black leading-none mb-2">
             Encuentra al
           </h1>
-          <h1 className="text-5xl font-black leading-none"
-            style={{ color: 'var(--accent-2)' }}>
+          <h1 className="text-5xl font-black leading-none" style={{ color: 'var(--accent-2)' }}>
             Impostor
           </h1>
         </div>
@@ -34,13 +26,13 @@ export default function Home() {
       </div>
 
       {/* CTA */}
-      <button
-        onClick={() => router.push('/setup')}
+      <Link
+        href="/setup"
         className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-transform active:scale-95"
         style={{ background: 'white', color: '#080b14' }}
       >
-        Empezar juego <span>→</span>
-      </button>
+        Empezar juego →
+      </Link>
     </main>
   )
 }
