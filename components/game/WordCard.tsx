@@ -11,7 +11,7 @@ export default function WordCard({ player, impostorHint, wordImage, imageLoading
   const isImpostor = player.role === 'impostor'
 
   return (
-    <div className="w-full rounded-3xl p-8 flex flex-col items-center gap-4"
+    <div className="w-full rounded-3xl px-8 flex flex-col items-center gap-4 lg:p-8"
       style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
 
       {isImpostor ? (

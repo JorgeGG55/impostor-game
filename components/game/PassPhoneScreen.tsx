@@ -7,7 +7,7 @@ interface PassPhoneScreenProps {
 
 export default function PassPhoneScreen({ player, onReveal }: PassPhoneScreenProps) {
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center gap-5 px-6 py-16"
+    <main className="min-h-dvh flex flex-col items-center justify-around lg:justify-center gap-10 px-6 py-14"
       style={{ background: 'var(--bg)' }}>
 
       <div className="flex flex-col items-center gap-8 text-center">
@@ -21,13 +21,16 @@ export default function PassPhoneScreen({ player, onReveal }: PassPhoneScreenPro
             <p className="mt-3">{player.name}</p>
           </h2>
         </div>
-        <div className="text-4xl animate-bounce">📱</div>
+      </div>
+
+      <div className="text-4xl animate-[float_1.5s_ease-in-out_infinite]">
+          📱
       </div>
 
       <div className="w-full flex flex-col items-center gap-3">
         <button
           onClick={onReveal}
-          className="w-full py-8 rounded-3xl font-bold text-xl transition-all active:scale-95 flex flex-col items-center gap-2"
+          className="w-full rounded-3xl font-bold text-xl transition-all active:scale-95 flex flex-col items-center gap-2"
           style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
         >
           <span className="text-3xl">👁</span>

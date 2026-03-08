@@ -21,7 +21,7 @@ export default function RevealScreen({
       style={{ background: 'var(--bg)' }}>
 
       <div className="flex flex-col items-center gap-6 text-center w-full">
-        <p className="text-xs font-semibold tracking-widest uppercase px-4 py-2 rounded-full"
+        <p className="text-1xl font-semibold tracking-widest uppercase px-4 py-2 rounded-full"
           style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }}>
           PALABRA SECRETA
         </p>
