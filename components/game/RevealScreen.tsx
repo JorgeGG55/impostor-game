@@ -31,6 +31,7 @@ export default function RevealScreen({
           impostorHint={session.config.impostorHint}
           wordImage={wordImage}
           imageLoading={imageLoading}
+          session={session} 
         />
 
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>

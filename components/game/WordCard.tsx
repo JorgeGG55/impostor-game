@@ -1,10 +1,11 @@
-import { Player } from '@/types'
+import { Player, GameSession } from '@/types'
 
 interface WordCardProps {
   player: Player
   impostorHint: boolean
   wordImage: string | null
   imageLoading: boolean
+  session: GameSession
 }
 
 export default function WordCard({ player, impostorHint, wordImage, imageLoading }: WordCardProps) {
@@ -21,10 +22,17 @@ export default function WordCard({ player, impostorHint, wordImage, imageLoading
             ¡Eres el Impostor!
           </h2>
           {impostorHint && (
-            <div className="mt-2 flex items-center gap-2 px-4 py-2 rounded-xl"
-              style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-              <p className="text-xl mb-1 font-bold" style={{ color: 'var(--text-muted)' }}>Pista:</p>
-              <p className="font-semibold">{player.hint}</p>
+            <div className="mt-2 flex flex-col gap-2 w-full">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <p className="font-bold" style={{ color: 'var(--text-muted)' }}>Categoría:</p>
+                <p className="font-semibold">{player.category}</p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <p className="font-bold" style={{ color: 'var(--text-muted)' }}>Pista:</p>
+                <p className="font-semibold">{player.hint}</p>
+              </div>
             </div>
           )}
         </>

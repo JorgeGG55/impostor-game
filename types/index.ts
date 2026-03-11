@@ -14,6 +14,7 @@ export interface Player {
   role: PlayerRole
   word: string
   hint: string
+  category: string
   hasRevealed: boolean
 }
 

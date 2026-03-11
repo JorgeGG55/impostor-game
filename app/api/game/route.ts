@@ -45,11 +45,24 @@ export async function POST(request: NextRequest) {
     const wordCategory = categories.find((cat) => cat.words.includes(secretWord))
     const categoryName = wordCategory?.name ?? categories.map((c) => c.name).join(' & ')
 
+    let impostorHint = categoryName
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+      const hintRes = await fetch(
+        `${baseUrl}/api/hint?q=${encodeURIComponent(secretWord)}&cat=${encodeURIComponent(categoryName)}`
+      )
+      const hintData = await hintRes.json()
+      if (hintData.hint) impostorHint = hintData.hint
+    } catch {
+    }
+
     const players = assignRoles({
       playerCount,
       impostorCount,
       secretWord,
-      categoryName,
+      categoryName: impostorHint,
+      wordCategory: wordCategory?.name ?? '',
     })
 
     return NextResponse.json({ players, secretWord, categoryName })

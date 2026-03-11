@@ -18,6 +18,7 @@ interface AssignRolesParams {
   impostorCount: number
   secretWord: string
   categoryName: string
+  wordCategory: string
 }
 
 export function assignRoles({
@@ -25,6 +26,7 @@ export function assignRoles({
   impostorCount,
   secretWord,
   categoryName,
+  wordCategory,
 }: AssignRolesParams): Player[] {
   const roles: PlayerRole[] = shuffleArray([
     ...Array(impostorCount).fill('impostor'),
@@ -37,6 +39,7 @@ export function assignRoles({
     role,
     word: role === 'player' ? secretWord : 'IMPOSTOR',
     hint: role === 'impostor' ? categoryName : '',
+    category: role === 'impostor' ? wordCategory : '',
     hasRevealed: false,
   }))
 }
